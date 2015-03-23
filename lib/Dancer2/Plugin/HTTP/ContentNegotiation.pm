@@ -18,20 +18,47 @@ our %negotiation_choosers = (
     'accept-encoding' => "choose_encoding",
 );
 
+our %accept_table = (
+    'type' => {
+        rqst => 'Accept',
+        rspn => 'Content-Type',
+        vars => 'http_accept',
+        ngtr => 'choose_media_type',
+    },
+    'lang' => {
+        rqst => 'Accept-Language',
+        rspn => 'Content-Language',
+        vars => 'http_accept_language',
+        ngtr => 'choose_language',
+    },
+    'char' => {
+        rqst => 'Accept-Charset',
+        rspn => 'Content-Language', # only valid for text as header parameter
+        vars => 'http_accept_charset',
+        ngtr => 'choose_charset',
+    },
+    'encd' => {
+        rqst => 'Accept-Encodig',
+        rspn => 'Content-Encoding',
+        vars => 'http_accept_encoding',
+        ngtr => 'choose_encoding',
+    },
+);
+
 register 'http_choose_accept' => sub {
-    return http_choose ( @_, 'accept' );
+    return http_choose ( @_, 'type' );
 };
 
 register 'http_choose_accept_language' => sub {
-    return http_choose ( @_, 'accept-language' );
+    return http_choose ( @_, 'lang' );
 };
 
 register 'http_choose_accept_charset' => sub {
-    return http_choose ( @_, 'accept-charset' );
+    return http_choose ( @_, 'char' );
 };
 
 register 'http_choose_accept_encoding' => sub {
-    return http_choose ( @_, 'accept-encoding' );
+    return http_choose ( @_, 'encd' );
 };
 
 sub http_choose {
@@ -58,11 +85,11 @@ sub http_choose {
     
     # choose from the provided definition
     my $selected = undef;
-    my $method = $negotiation_choosers{$accept}; # this should be avoided
-    if ( $dsl->request->header($accept) ) {
+    my $method = $accept_table{$accept}->{'ngtr'}; # this should be avoided
+    if ( $dsl->request->header($accept_table{$accept}->{'rqst'}) ) {
         $selected = $negotiator->$method (
             [ map { $_->{selector} } @choices ],
-            $dsl->request->header($accept)
+            $dsl->request->header($accept_table{$accept}->{'rqst'})
         );
     };
     # if nothing selected, use sensible default
@@ -80,38 +107,39 @@ sub http_choose {
         $dsl->halt;
     };
     
-    my $variable_name = "http_$accept" =~ y/ -/__/r;
-    $dsl->vars->{$variable_name} = $selected;
-    $dsl->header('Content-Type' => "$selected" ); # XXX THIS IS NOT TRUE
-    $dsl->header('Vary' => join ', ', $accept, $dsl->header('Vary') )
-        if @choices > 1 ;
+    $dsl->vars->{$accept_table{$accept}->{'vars'}} = $selected;
+    $dsl->header($accept_table{$accept}->{'rspn'} => "$selected" );
+    $dsl->header(
+        'Vary'
+        => join ', ', $dsl->header('Vary'), $accept_table{$accept}->{'rspn'}
+    ) if @choices > 1 ;
     my @coderefs = grep {$_->{selector} eq $selected} @choices;
     return $coderefs[0]{coderef}->($dsl);
 };
 
 register 'http_accept' => sub {
-    return http_accepted ( @_, 'accept' );
+    return http_accepted ( @_, 'type' );
 };
 
 register 'http_accept_language' => sub {
-    return http_accepted ( @_, 'accept-language' );
+    return http_accepted ( @_, 'lang' );
 };
 
 register 'http_accept_charset' => sub {
-    return http_accepted ( @_, 'accept-charset' );
+    return http_accepted ( @_, 'char' );
 };
 
 register 'http_accept_encoding' => sub {
-    return http_accepted ( @_, 'accept-encoding' );
+    return http_accepted ( @_, 'encd' );
 };
 
 sub http_accepted {
     my $dsl = shift;
     my $accept = pop; 
     
-    unless ( exists $dsl->vars->{accept} ) {
+    unless ( exists $dsl->vars->{$accept_table{$accept}->{'vars'}} ) {
         $dsl->app->log( warning =>
-            qq|'i$accept' should only be used in an authenticated route|
+            qq|'$accept' should only be used in an authenticated route|
         );
     }
     if (@_ >= 1) {
@@ -120,8 +148,8 @@ sub http_accepted {
         );
     }
     
-    return unless exists $dsl->vars->{accept};
-    return $dsl->vars->{accept};
+    return unless exists $dsl->vars->{$accept_table{$accept}->{'vars'}};
+    return $dsl->vars->{$accept_table{$accept}->{'vars'}};
     
 } # http_accepted
 
@@ -137,7 +165,6 @@ sub _parse_choices {
     # each hash containin a 'selector' and associated coderef.
     # since the 'key' can be an arrayref too, these are added to the list with
     # seperate values
-    
     my @choices;
     while ( @_ ) {
         my ($choices, $coderef) = @{[ shift, shift ]};

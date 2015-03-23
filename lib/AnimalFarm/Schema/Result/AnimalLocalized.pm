@@ -16,6 +16,10 @@ column "animal_ID" => {
     data_type            => 'integer',
 };
 
+column "language_tag" => {
+    data_type            => 'text',
+};
+
 column "common_name" => { 
     data_type            => 'text', 
 }; 

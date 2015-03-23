@@ -1,71 +1,126 @@
 use Dancer2;
 
+use strict;
+use warnings;
+
 use lib '../lib';
 use Dancer2::Plugin::HTTP::ContentNegotiation;
 
-use AnimalFarm;
+use AnimalFarm::REST;
 
-my $animalfarm = AnimalFarm->new();
-$animalfarm->collection('Animals')->set_language( 'nl', 'en', 'fr' );
+my $farm = AnimalFarm::REST->new( default_languages => [ 'en', 'nl', 'fr' ] );
+
+
 
 get '/animals' => sub {
-  my @animals = $animalfarm->collection('Animals')->all;
+  my @animals = $farm->datastore('Animals')->all;
 };
 
-get '/animals/:id' => sub {
-  my $animal = $animalfarm->collection('Animals')->find( params->{id} );
-  unless ($animal) {
-    status 400;
-    return "Animal with ${ params->{id} } not found";
-  };
-  http_choose_accept (
-    'application/json'
-      => sub { http_choose_accept_language ( $animal->get_language
-        => sub {
-          $animal->set_language = http_accept_language;
-          to_json $animal
-      })},
-#   'application/xml'
-#     => sub { to_xml $animal },
-    [ 'image/png', 'image/gif', 'image/jpeg' ]
-      => sub {
-      },
-  )
-};
+
 
 post '/animals' => sub {
-  my $animal = $animalfarm->object('Animal')->new( ... );
-  my $lang = request->headers('Content-Language')
-          || $animalfarm->collection('Animals')->get_language;
-  $animal->set_language($lang);
-  my $id = $animalfarm->collection('Animals')->insert($animal);
+  
+  # only accept JSON requests
+  unless ( lc request->content_type eq 'application/json' ) {
+    status 400;
+    return "Bad content type " . request->content_type;
+  };
+  
+  # use the Content-Language or a default to remain backward compatible
+  my $lang = request->header('Content-Language')
+    || $farm->default_languages->[0];
+  my $animal = $farm->object('Animal')
+    ->_multilingual_new($lang => from_json(request->body) );
+  
+  # insert the newly created Animal Object
+  my $id = $farm->datastore('Animals')->insert($animal);
+  
+  # return the proper status message for a created resource
+  if ($id) {
+    status 201; # Created
+    push_header 'Location' => "/animals/$id";
+  }
+  else {
+    status 400; # Error
+  };
 };
+
+
+
+get '/animals/:id' => sub {
+  
+  # check if there is any animal with this ID
+  my $animal = $farm->datastore('Animals')->lookup( params->{id} );
+  unless ($animal) {
+    status 404;
+    return "Animal with @{[ params->{id} ]} not found";
+  };
+  
+  # do content negotiaton
+  http_choose_accept_language (
+    [$animal->_multilingual_lst] => sub {
+      return $animal->_to_json({ lang => http_accept_language });
+    },
+    { default => $farm->default_languages->[0] }
+  );
+    
+};
+
+
 
 put '/animals/:id' => sub {
-  my $animal = $animalfarm->collection('Animals')->find( params->{id} );
+  
+  # check if there is any animal with this ID
+  my $animal = $farm->datastore('Animals')->lookup( params->{id} );
   unless ($animal) {
-    status 400;
-    return "Animal with ${ params->{id} } not found";
+    status 404;
+    return "Animal with @{[ params->{id} ]} not found";
   };
-  my $lang = request->headers('Content-Language')
-          || $animalfarm->collection('Animals')->get_language;
-  $animal->add_language($lang => ... );
+  
+  # only accept JSON requests
+  unless ( lc request->content_type eq 'application/json' ) {
+    status 400;
+    return "Bad content type " . request->content_type;
+  };
+
+  # use the Content-Language or a default to remain backward compatible
+  my $lang = request->header('Content-Language')
+    || $farm->default_languages->[0];
+  
+  # update the object
+  $animal->_multilingual_upd( $lang => from_json(request->body) );
+  
+  # update the datastore
+  $farm->datastore('Animals')->update($animal);
 };
 
-del 'animals/:id' => sub {
-  my $animal = $animalfarm->collection('Animals')->find( params->{id} );
+
+
+del '/animals/:id' => sub {
+  
+  # check if there is any animal with this ID
+  my $animal = $farm->datastore('Animals')->lookup( params->{id} );
   unless ($animal) {
-    status 400;
-    return "Animal with ${ params->{id} } not found";
+    status 404;
+    return "Animal with @{[ params->{id} ]} not found";
   };
-  my $lang = request->headers('Content-Language');
+  
+  # use the Content-Language or a default to remain backward compatible
+  my $lang = request->header('Content-Language');
+  
   if ($lang) {
-    $animal->del_language($lang);
+    # delete the language variant inside the object
+    $animal->_multilingual_del($lang);
+    # update the datastore
+    $farm->datastore('Animals')->update($animal);
   } else {
-    $animalfarm->collection('Animals')->remove($animal);
+    # cascade remove the object from the datastore
+    $farm->datastore('Animals')->remove($animal);
   }
   
 };
+
+
 
 dance;
 

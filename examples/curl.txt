@@ -1,0 +1,72 @@
+
+
+
+# very basic
+
+curl --verbose http://localhost:3000/animals/1
+
+
+
+# a bit more explicit
+
+curl --verbose http://localhost:3000/animals/1 \
+-X GET \
+-H 'Accept-Language: nl' \
+
+
+
+# and another language and animal
+
+curl --verbose http://localhost:3000/animals/2 \
+-X GET \
+-H 'Accept-Language: ro' \
+
+
+# update it with romanian
+
+curl --verbose http://localhost:3000/animals/2 \
+-X PUT \
+-H 'Content-Type: application/json' \
+-H 'Content-Language: ro' \
+-d "{\"avrg_age\": 100740, \"name\": \"Felis sylvestris\", \"known_as\": \"piscă\", \"sound\": \"miau\" }" \
+
+
+# create a mouse
+
+curl --verbose http://localhost:3000/animals \
+-X POST \
+-H 'Content-Type: application/json' \
+-d "{\"avrg_age\": 2400, \"name\": \"Muriculus Mus\", \"known_as\": \"mouse\", \"sound\": \"peep\" }" \
+
+
+create a romanian cow
+
+
+
+curl --verbose http://localhost:3000/animals \
+-X POST \
+-H 'Content-Type: application/json' \
+-H 'Content-Language: ro' \
+-d "{\"avrg_age\": 175200, \"name\": \"Bos Taurus\", \"known_as\": \"vacă\", \"sound\": \"muuuuu\" }" \
+
+
+
+delete a language variant
+
+
+
+
+
+curl --verbose http://localhost:3000/animals/27 \
+-X GET \
+
+
+
+
+
+curl --verbose http://localhost:3000/animals/27 \
+-X DELETE \
+-H 'Content-language: en' \
+
+
+
