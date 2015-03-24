@@ -22,8 +22,8 @@ post '/animals' => sub {
   
   # only accept JSON requests
   unless ( lc request->content_type eq 'application/json' ) {
-    status 400;
-    return "Bad content type " . request->content_type;
+    status 415;
+    return "Unsuported Media Type" . request->content_type;
   };
   
   # use the Content-Language or a default to remain backward compatible
@@ -79,8 +79,8 @@ put '/animals/:id' => sub {
   
   # only accept JSON requests
   unless ( lc request->content_type eq 'application/json' ) {
-    status 400;
-    return "Bad content type " . request->content_type;
+    status 415;
+    return "Unsuported Media Type" . request->content_type;
   };
 
   # use the Content-Language or a default to remain backward compatible
