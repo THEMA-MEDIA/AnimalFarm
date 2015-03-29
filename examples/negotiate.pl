@@ -6,14 +6,14 @@ use warnings;
 use lib '../lib';
 use Dancer2::Plugin::HTTP::ContentNegotiation;
 
-use AnimalFarm::REST;
+use AnimalSanctuary::REST;
 
-my $farm = AnimalFarm::REST->new( default_languages => [ 'en', 'nl', 'fr' ] );
+my $sanctuary = AnimalSanctuary::REST->new( default_languages => [ 'en', 'nl', 'fr' ] );
 
 
 
 get '/animals' => sub {
-  my @animals = $farm->datastore('Animals')->all;
+  my @animals = $sanctuary->datastore('Animals')->all;
 };
 
 
@@ -28,12 +28,12 @@ post '/animals' => sub {
   
   # use the Content-Language or a default to remain backward compatible
   my $lang = request->header('Content-Language')
-    || $farm->default_languages->[0];
-  my $animal = $farm->object('Animal')
+    || $sanctuary->default_languages->[0];
+  my $animal = $sanctuary->object('Animal')
     ->_multilingual_new($lang => from_json(request->body) );
   
   # insert the newly created Animal Object
-  my $id = $farm->datastore('Animals')->insert($animal);
+  my $id = $sanctuary->datastore('Animals')->insert($animal);
   
   # return the proper status message for a created resource
   if ($id) {
@@ -50,7 +50,7 @@ post '/animals' => sub {
 get '/animals/:id' => sub {
   
   # check if there is any animal with this ID
-  my $animal = $farm->datastore('Animals')->lookup( params->{id} );
+  my $animal = $sanctuary->datastore('Animals')->lookup( params->{id} );
   unless ($animal) {
     status 404;
     return "Animal with @{[ params->{id} ]} not found";
@@ -61,7 +61,7 @@ get '/animals/:id' => sub {
     [$animal->_multilingual_lst] => sub {
       return $animal->_to_json({ lang => http_accept_language });
     },
-    { default => $farm->default_languages->[0] }
+    { default => $sanctuary->default_languages->[0] }
   );
     
 };
@@ -71,7 +71,7 @@ get '/animals/:id' => sub {
 put '/animals/:id' => sub {
   
   # check if there is any animal with this ID
-  my $animal = $farm->datastore('Animals')->lookup( params->{id} );
+  my $animal = $sanctuary->datastore('Animals')->lookup( params->{id} );
   unless ($animal) {
     status 404;
     return "Animal with @{[ params->{id} ]} not found";
@@ -85,13 +85,13 @@ put '/animals/:id' => sub {
 
   # use the Content-Language or a default to remain backward compatible
   my $lang = request->header('Content-Language')
-    || $farm->default_languages->[0];
+    || $sanctuary->default_languages->[0];
   
   # update the object
   $animal->_multilingual_upd( $lang => from_json(request->body) );
   
   # update the datastore
-  $farm->datastore('Animals')->update($animal);
+  $sanctuary->datastore('Animals')->update($animal);
 };
 
 
@@ -99,7 +99,7 @@ put '/animals/:id' => sub {
 del '/animals/:id' => sub {
   
   # check if there is any animal with this ID
-  my $animal = $farm->datastore('Animals')->lookup( params->{id} );
+  my $animal = $sanctuary->datastore('Animals')->lookup( params->{id} );
   unless ($animal) {
     status 404;
     return "Animal with @{[ params->{id} ]} not found";
@@ -112,10 +112,10 @@ del '/animals/:id' => sub {
     # delete the language variant inside the object
     $animal->_multilingual_del($lang);
     # update the datastore
-    $farm->datastore('Animals')->update($animal);
+    $sanctuary->datastore('Animals')->update($animal);
   } else {
     # cascade remove the object from the datastore
-    $farm->datastore('Animals')->remove($animal);
+    $sanctuary->datastore('Animals')->remove($animal);
   }
   
 };

@@ -1,4 +1,4 @@
-# AnimalFarm
+# AnimalSanctuary
 Demo for HTTP-Authoring with a Multilingual REST api
 
 While writing a paper on HTTP-Authoring with a Multilingual REST api, it became time to write some implementation of a server that would be capapble of handling the requests.

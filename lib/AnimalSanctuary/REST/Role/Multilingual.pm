@@ -1,4 +1,4 @@
-package AnimalFarm::REST::Role::Multilingual;
+package AnimalSanctuary::REST::Role::Multilingual;
 
 use Moo::Role;
 use List::Util 'first';
@@ -35,7 +35,7 @@ sub _multilingual_new {
   my $prms = shift;
   
   # for all the multilingual attributes, turn the simple params into hashes
-  foreach my $param (@{$self->_lang_attributes}) {
+  foreach my $param ($self->_lang_attributes) {
     next unless (exists $prms->{$param} );
     $prms->{$param} = { $lang => $prms->{$param} };
   };
@@ -63,7 +63,7 @@ sub _multilingual_upd {
   my $prms = shift;
   
   # update the language variant params
-  foreach my $param (@{$self->_lang_attributes}) {
+  foreach my $param ($self->_lang_attributes) {
     next unless (exists $prms->{$param} );
     $self->{$param}->{$lang} = delete $prms->{$param};
   };
@@ -93,7 +93,7 @@ sub _multilingual_del {
   my $lang = shift or die;
   
   # remove the keys for the multilingual hashes
-  foreach my $param (@{$self->_lang_attributes}) {
+  foreach my $param ($self->_lang_attributes) {
     delete $self->{$param}->{$lang};
   };
   
@@ -117,7 +117,7 @@ sub _multilingual_lst {
   my %lang;
 
   # increase the keys for the multilingual hashes
-  foreach my $param (@{$self->_lang_attributes}) {
+  foreach my $param ($self->_lang_attributes) {
     $lang{$_}++ for keys %{ $self->{$param} };
   };
   return keys %lang;
@@ -129,10 +129,10 @@ sub _to_json {
   my @lang = (defined $opts and exists $opts->{'lang'}) ?
     $opts->{'lang'} : $self->default_languages;
   my $attr = {};
-  foreach my $attribute (@{$self->_smpl_attributes}) {
+  foreach my $attribute ($self->_smpl_attributes) {
     $attr->{$attribute} = $self->{$attribute};
   };
-  foreach my $attribute (@{$self->_lang_attributes}) {
+  foreach my $attribute ($self->_lang_attributes) {
     $attr->{$attribute} = $self->{$attribute}->{
       first { exists ($self->{$attribute}->{$_})} @lang
     }

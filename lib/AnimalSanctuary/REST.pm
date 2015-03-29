@@ -1,17 +1,19 @@
-package AnimalFarm::REST;
+package AnimalSanctuary::REST;
 
 use Moo;
 
-use AnimalFarm::Schema;
-use AnimalFarm::REST::DataStore;
-use AnimalFarm::REST::Object;
+use AnimalSanctuary::Schema;
+use AnimalSanctuary::REST::DataStore;
+use AnimalSanctuary::REST::Object;
+
+use Class::Load 'load_class';
 
 use MooX::Types::MooseLike::Base 'HashRef';
 
 has storage_engine => (
   is      => 'ro',
   default => sub {
-    return AnimalFarm::Schema->connect('dbi:SQLite:../etc/database.sqlite');
+    return AnimalSanctuary::Schema->connect('dbi:SQLite:../etc/database.sqlite');
   },
 );
 
@@ -35,28 +37,56 @@ sub datastore {
   my $self = shift;
   my $name = shift;
   unless (exists $self->class_datastore->{$name}) {
+    my $class_name = __PACKAGE__ . '::DataStore::' . $name;
+    load_class($class_name);
     $self->class_datastore->{$name}
-    = AnimalFarm::REST::DataStore->new(
-      sub_class_name    => $name,
-      storage_engine    => $self->storage_engine,
-#     default_languages => $self->default_languages,
+    = $class_name->new(
+      storage_engine => $self->storage_engine
     );
   };
-  return $self->class_datastore->{$name}
+  return $self->class_datastore->{$name};
 };
 
 sub object {
   my $self = shift;
   my $name = shift;
   unless (exists $self->class_object->{$name}) {
+    my $class_name = __PACKAGE__ . '::Object::' . $name;
+    load_class($class_name);
     $self->class_object->{$name}
-    = AnimalFarm::REST::Object->new(
-      sub_class_name    => $name,
-      storage_engine    => $self->storage_engine,
-#     default_languages => $self->default_languages,
+    = $class_name->new(
+      storage_engine => $self->storage_engine
     );
   };
-  return $self->class_object->{$name}
+  return $self->class_object->{$name};
 };
+
+# sub datastore {
+#   my $self = shift;
+#   my $name = shift;
+#   unless (exists $self->class_datastore->{$name}) {
+#     $self->class_datastore->{$name}
+#     = AnimalSanctuary::REST::DataStore->new(
+#       sub_class_name    => $name,
+#       storage_engine    => $self->storage_engine,
+# #     default_languages => $self->default_languages,
+#     );
+#   };
+#   return $self->class_datastore->{$name}
+# };
+
+# sub object {
+#   my $self = shift;
+#   my $name = shift;
+#   unless (exists $self->class_object->{$name}) {
+#     $self->class_object->{$name}
+#     = AnimalSanctuary::REST::Object->new(
+#       sub_class_name    => $name,
+#       storage_engine    => $self->storage_engine,
+# #     default_languages => $self->default_languages,
+#     );
+#   };
+#   return $self->class_object->{$name}
+# };
 
 1;

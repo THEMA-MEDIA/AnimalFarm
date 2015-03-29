@@ -1,10 +1,38 @@
-package AnimalFarm::REST::DataStore::Animals;
+package AnimalSanctuary::REST::DataStore::Animals;
 
 use Moo;
 
-extends 'AnimalFarm::REST::DataStore';
+extends 'AnimalSanctuary::REST::DataStore';
 
-use AnimalFarm::REST::Object::Animal;
+use AnimalSanctuary::REST::Object::Animal;
+
+sub _RESTobject { {
+  Object => 'AnimalSanctuary::REST::Object::Animal',
+  Attributes => [
+    name => {
+      storage => 'Animal',
+      handles => 'scientific_name',
+      },
+    avrg_age => {
+      storage => 'Animal',
+      handles => 'max_age',
+    },
+    known_as => {
+      storage => 'Animal',
+      multilingual => 'localizations',
+      language_tag => 'language_tag',
+      handles => 'common_name',
+    },
+    sound => {
+      storage => 'Animal',
+      multilingual => 'localizations',
+      language_tag => 'language_tag',
+      handles => 'sound',
+    },
+  ],
+} };
+
+use DDP; my $struct = _RESTobject; p $struct;
 
 sub insert {
   my $clss = shift;
@@ -60,7 +88,7 @@ sub lookup {
   };
   
   # create the class object
-  return AnimalFarm::REST::Object::Animal->new(%prms);
+  return AnimalSanctuary::REST::Object::Animal->new(%prms);
 };
 
 sub update {

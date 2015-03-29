@@ -1,8 +1,8 @@
-package AnimalFarm::Schema::Result::AnimalLocalized;
+package AnimalSanctuary::Schema::Result::AnimalLocalized;
 
 use utf8;
 
-use AnimalFarm::Schema::Candy;
+use AnimalSanctuary::Schema::Candy;
 
 table "animals_localized";
 
@@ -30,7 +30,7 @@ column "sound" => {
 
 primary_key "ID";
 
-belongs_to "animal" => "AnimalFarm::Schema::Result::Animal",
+belongs_to "animal" => "AnimalSanctuary::Schema::Result::Animal",
     { "foreign.ID" => "self.animal_ID" },
     {}
 ;

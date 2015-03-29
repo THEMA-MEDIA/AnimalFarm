@@ -1,4 +1,4 @@
-package AnimalFarm::Schema;
+package AnimalSanctuary::Schema;
 
 use utf8;
 

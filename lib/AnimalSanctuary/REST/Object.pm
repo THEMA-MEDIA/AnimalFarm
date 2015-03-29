@@ -1,7 +1,7 @@
-package AnimalFarm::REST::Object;
+package AnimalSanctuary::REST::Object;
 
 use Moo;
-extends 'AnimalFarm::REST';
+extends 'AnimalSanctuary::REST';
 
 use Class::Load 'load_class';
 

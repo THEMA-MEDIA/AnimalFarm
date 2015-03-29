@@ -1,4 +1,4 @@
-package AnimalFarm::Schema::Result;
+package AnimalSanctuary::Schema::Result;
 
 use base 'DBIx::Class::Core';
 use DBIx::Class::Carp;

@@ -1,8 +1,8 @@
-package AnimalFarm::Schema::Result::Animal;
+package AnimalSanctuary::Schema::Result::Animal;
 
 use utf8;
 
-use AnimalFarm::Schema::Candy;
+use AnimalSanctuary::Schema::Candy;
 
 table "animals";
 
@@ -22,7 +22,7 @@ column "max_age" => {
 
 primary_key "ID";
 
-has_many "localizations" => "AnimalFarm::Schema::Result::AnimalLocalized",
+has_many "localizations" => "AnimalSanctuary::Schema::Result::AnimalLocalized",
     { "foreign.animal_ID" => "self.ID" },
     {}
 ;

@@ -1,8 +1,8 @@
-package AnimalFarm::Schema::Candy;
+package AnimalSanctuary::Schema::Candy;
 
 use base 'DBIx::Class::Candy';
 
-sub base { $_[1] || 'AnimalFarm::Schema::Result' };
+sub base { $_[1] || 'AnimalSanctuary::Schema::Result' };
 
 1;
 
